@@ -7,51 +7,83 @@
     <title>Registrazione</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    <link rel="stylesheet" href="mystyle.css">
 </head>
 
 <body>
     <div class="container">
-        <input type="radio" class="btn-check" name="options" id="btnCliente" checked onchange="manageForm()">
-        <label class="btn btn-outline-primary" for="btnCliente">Cliente</label>
+        <div class="row">
+            <div class="col"></div>
+            <div class="col">
+                <div class="mt-3 d-flex justify-content-center">
+                    <input type="radio" class="btn-check" name="options" id="btnCliente" checked onchange="manageForm()">
+                    <label class="btn btn-outline-primary  ms-3" for="btnCliente">Cliente</label>
 
-        <input type="radio" class="btn-check" name="options" id="btnRistoratore" onchange="manageForm()">
-        <label class="btn btn-outline-primary" for="btnRistoratore">Ristoratore</label>
+                    <input type="radio" class="btn-check" name="options" id="btnRistoratore" onchange="manageForm()">
+                    <label class="btn btn-outline-primary ms-3" for="btnRistoratore">Ristoratore</label>
+                </div>
+                <div id="form">
+                    <form onsubmit="signup(event)">
+                        <div class="mb-3">
+                            <label for="nome" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="nome" required>
+                        </div>
 
-        <div id="form">
-            <label for="nome" class="form-label">Nome</label>
-            <input type="text" class="form-control" id="nome" required>
+                        <div class="mb-3">
+                            <label for="cognome" class="form-label">Cognome</label>
+                            <input type="text" class="form-control" id="cognome" required>
+                        </div>
 
-            <label for="cognome" class="form-label">Cognome</label>
-            <input type="text" class="form-control" id="cognome" required>
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
 
-            <label for="username" class="form-label">Username</label>
-            <input type="text" class="form-control" id="username" required>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
 
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" required>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
 
-            <label for="password" class="form-label">Password</label>
-            <input type="password" class="form-control" id="password" required>
-            
-            <div id="cliente">
-                <label for="nCarta" class="form-label">Numero di Carta</label>
-                <input type="text" class="form-control" id="carta" >
+                        <div id="cliente">
+                            <div class="mb-3">
+                                <label for="nCarta" class="form-label">Numero di Carta</label>
+                                <input type="text" class="form-control" id="carta" >
+                            </div>
 
-                <label for="dataCarta" class="form-label">Data di Scadenza</label>
-                <input type="date" class="form-control" id="dataCarta" >
+                            <div class="mb-3">
+                                <label for="dataCarta" class="form-label">Data di Scadenza</label>
+                                <input type="date" class="form-control" id="dataCarta" >
+                            </div>
 
-                <label for="CVVCarta" class="form-label">CVV</label>
-                <input type="number" class="form-control" id="CVVCarta" >
+                            <div class="mb-3">
+                                <label for="CVVCarta" class="form-label">CVV</label>
+                                <input type="number" class="form-control" id="CVVCarta" min="100" max="999">
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center">
+                            <button type="submit" class="btn btn-primary">Registrati</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="mt-5 d-flex justify-content-center">
+                    <a href="index.html"><button class="btn btn-outline-primary">Login</button></a>
+                </div>
             </div>
-
+            <div class="col"></div>
         </div>
 
-        <button type="submit" class="btn btn-primary" onclick="signup()">Submit</button>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
         crossorigin="anonymous"></script>
     <script>
+        //nasonde i dati specifici del cliente in base alla selezione del tipo di account
         function manageForm(){
             if(document.getElementById("btnCliente").checked==true){
                 document.getElementById("cliente").style.display="";
@@ -61,7 +93,9 @@
             }
         }
 
-        function signup() {
+        function signup(event) {
+            event.preventDefault(); //blocca il refresh della pagina
+
             const nome = document.getElementById('nome').value;
             const cognome = document.getElementById('cognome').value;
             const username = document.getElementById('username').value;
@@ -98,12 +132,15 @@
                 body: JSON.stringify(user)
             };
 
-            fetch("http://server-t410:3000/signup", options)
+            fetch("http://server-t410:3000/user", options)
                 .then(response => response.json())
                 .then(result => {
+                    console.log(result);
                     if(result.success===true){
-                        console.log(result);
-                        window.location.replace("login.html");
+                        window.location.replace("login.html"); //se la registrazioane va a buon fine si viene rendirizzati alla login
+                    }
+                    else{
+                        alert(result.message);
                     }
                 });
         }
