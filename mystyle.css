@@ -5,3 +5,7 @@
     justify-content: center;
     overflow: scroll;
 }
+
+.thumb{
+    width: 150px;
+}

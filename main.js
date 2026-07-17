@@ -373,6 +373,70 @@ app.delete('/ristorante/:ristoratore', async (req, res) => {
     }
 })
 
+//===================PIATTO===================\\
+app.post('/piatto/:ristorante', async (req, res) => {
+    const nome = req.body.nome;
+    const categoria = req.body.categoria;
+    const prezzo = req.body.prezzo;
+    const img = req.body.img;
+    const ingredienti = req.body.ingredienti;
+    const ricetta = req.body.ricetta;
+    const ristorante = req.params.ristorante;
+
+    if (nome.length < 3) {
+        console.log("Campo non valido");
+        res.status(401).json({success: false, message: "Nome troppo corto"});
+    }
+    if (categoria.length < 3) {
+        console.log("Campo non valido");
+        res.status(401).json({success: false, message: "Categoria non valida"});
+    }
+    if (prezzo < 0.5) {
+        console.log("Campo non valido");
+        res.status(401).json({success: false, message: "Prezzo non valido"});
+    }
+    if (img.length===0) {
+        console.log("Campo non valido");
+        res.status(401).json({success: false, message: "Link all'immagine non valido"});
+    }
+
+    //converto gli ingredienti in array
+    let arrIngredienti=ingredienti.replace(", ",",");
+    arrIngredienti=arrIngredienti.split(",");
+    if(arrIngredienti[arrIngredienti.length-1]==" "){ //rimuovo l'ultimo elemento se è vuoto
+        arrIngredienti.pop();
+    }
+
+    try {
+        const client = await MongoClient.connect(mongoURL);
+        const coll = client.db('Fastfood').collection('piatto');
+        const piatto = {
+            nome: nome,
+            categoria: categoria,
+            prezzo: prezzo,
+            img: img,
+            ingredienti: arrIngredienti,
+            ricetta: ricetta,
+            id_ristorante: ristorante
+        };
+
+        const result = await coll.insertOne(piatto);
+        console.log("Piatto Creato:");
+        console.log(result);
+        res.status(201).json({success: true, message: "Piatto Creato"});
+        await client.close();
+      
+    } catch (error) {
+        console.log(error);
+        if (error.code == 11000) { //conflitto sugli indici DB
+            res.status(409).json({ success: false, message: "Piatto già esistente" }); //errore di conflitto HTML
+        } else {
+            res.status(500).json({ success: false, message: "Errore non gestito" });
+        }
+    }
+    res.send();
+});
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })

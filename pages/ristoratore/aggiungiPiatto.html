@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Piatto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Fast Food</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+            <a class="nav-link" href="#" >Home</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="creaRistorante.html">Ristorante</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="menu.html">Menù</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="../account.html">Account</a>
+            </li>
+        </ul>
+        <div class="d-flex">
+            <button class="btn btn-outline-secondary" onclick="logout()">Logout</button>
+        </form>
+        </div>
+    </div>
+    </nav>
+
+    <div class="mt-4">
+        <a href="aggiungiCustom.html"><button class="btn btn-outline-primary">Aggiungi Piatto Personalizzato</button></a>
+    </div>
+    <div class="row mt-3">
+        <div id="modello" class="col-lg-4 col-md-6 d-none">
+            <div class="card">
+                <img src="" class="card-img-top" alt="">
+                <div class="card-body">
+                    <h5 class="card-title"></h5>
+                    <p class="card-text"></p>
+                    <p class="card-text"></p>
+                    <p class="card-text"></p>
+                    <button onclick="aggiungi(event)" class="btn btn-primary">Aggiungi al Menù</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
+    crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", ()=>{
+            //se l'utente non è autenticato viene mandato alla login
+            if(localStorage.getItem("auth")===null || localStorage.getItem("accType")!="ristoratore"){
+                localStorage.clear();
+                window.location.replace("../../index.html");
+            }
+            
+            //l'utente viene rendirizzato alla pagine di creazione se non ha ancora creato il ristorante
+            const proprietario= localStorage.getItem("auth");
+            fetch(`http://server-t410:3000/ristorante/${proprietario}`)
+                .then(response => {
+                    console.log(response.status);
+                    if(response.status===404){
+                        window.location.replace("creaRistorante.html");
+                    }
+                });
+
+            getJSON();
+        });
+
+        function getJSON(){
+            var modello = document.getElementById('modello');
+            fetch("../../meals.json")
+                .then(res => res.json())
+                .then(piatti => {
+                    
+                    for (var i = 0; i < piatti.length; i++) {
+                        var clone = modello.cloneNode(true);
+                        var piatto = piatti[i];
+
+                        clone.getElementsByClassName('card-title')[0].innerHTML += piatto.strMeal;
+                        clone.getElementsByClassName('card-text')[0].innerHTML += piatto.strCategory;
+                        //metto assieme ingredienti e misure
+                        let str="";
+                        for(let j=0;j<piatto.ingredients.length;j++){
+                            str+=piatto.ingredients[j]+" ("+piatto.measures[j]+")<br>";
+                        }
+                        clone.getElementsByClassName('card-text')[1].innerHTML += str;
+                        clone.getElementsByClassName('card-text')[2].innerHTML += piatto.strInstructions;
+                        clone.getElementsByTagName('img')[0].src = piatto.strMealThumb;
+                        clone.getElementsByTagName('button')[0].value = i; //il bottone ha come valore l'id della card che contiene tutte le info
+
+                        clone.classList.remove('d-none');
+                        clone.id = i;
+                        modello.before(clone);
+                    }
+                });
+        }
+
+        function aggiungi(event){
+            let id=event.target.value;
+            const div=document.getElementById(id);
+
+            const nome=div.getElementsByClassName('card-title')[0].innerHTML;
+            const categoria=div.getElementsByClassName('card-text')[0].innerHTML;
+            const ingredienti=div.getElementsByClassName('card-text')[1].innerHTML;
+            const ricetta=div.getElementsByClassName('card-text')[2].innerHTML;
+            const img=div.getElementsByTagName('img')[0].src;
+
+            const piatto={
+                nome: nome,
+                categoria: categoria,
+                ingredienti: ingredienti,
+                ricetta: ricetta,
+                img: img
+            }
+            localStorage.setItem("piatto",JSON.stringify(piatto));
+            window.location.replace("aggiungiCustom.html");
+
+        }
+
+        function logout(){
+            localStorage.clear();
+            window.location.replace("../../index.html");
+        }
+
+    </script>
+</body>
+</html>
