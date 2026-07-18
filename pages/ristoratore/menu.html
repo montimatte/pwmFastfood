@@ -55,9 +55,8 @@
             <td></td>
             <td><img class="thumb" src=""></td>
             <td>
-                <div class="row mb-2"><button class="btn btn-sm btn-outline-info">Dettagli</button></div>
-                <div class="row mb-2"><button class="btn btn-sm btn-outline-warning">Modifica</button></div>
-                <div class="row mb-2"><button class="btn btn-sm btn-outline-danger">Cancella</button></div>
+                <div class="row mb-2"><button class="btn btn-sm btn-outline-info" onclick="dettagli(event)">Dettagli</button></div>
+                <div class="row mb-2"><button class="btn btn-sm btn-outline-warning" onclick="modifica(event)">Modifica</button></div>
             </td>
         </tr>
     </table>
@@ -83,7 +82,72 @@
                         window.location.replace("creaRistorante.html");
                     }
                 });
+
+                caricaMenu();
         });
+
+        async function caricaMenu(){
+            const proprietario= localStorage.getItem("auth");
+            await fetch(`http://server-t410:3000/ristorante/${proprietario}`) //l'await server per essere sicuri che prima di inserire il piatto io abbia l'id del ristorante
+                .then(response => response.json())
+                .then(result => {
+                    console.log(result);
+                    if(result.success===true){
+                        let rest=JSON.parse(result.rest);
+                        idRistorante=rest._id;
+                    }
+                    else{
+                        alert(result.message);
+                    }
+                });
+
+            fetch(`http://server-t410:3000/piatti/${idRistorante}`)
+                .then(response => response.json())
+                .then(result => {
+                    console.log(result);
+                    if(result.success===true){
+                        const piatti=JSON.parse(result.piatti);
+                        var modello = document.getElementById('modello');
+
+                        for(let i=0;i<piatti.length;i++){
+                        var clone = modello.cloneNode(true);
+                        var piatto = piatti[i];
+
+                        clone.getElementsByTagName('td')[0].innerHTML += piatto.nome;
+                        clone.getElementsByTagName('td')[1].innerHTML += piatto.categoria;
+                        clone.getElementsByTagName('td')[2].innerHTML += piatto.prezzo;
+                        clone.getElementsByTagName('img')[0].src = piatto.img;
+
+                        let bottoni=clone.getElementsByTagName('button');
+                        for(let j=0;j<bottoni.length;j++){
+                            bottoni[j].value=piatto._id;
+                        }
+
+                        clone.removeAttribute("id"); //rimuovo l'id per evitare conflitti
+                        clone.removeAttribute("class"); //rimuovo l'intero attributo perchè class veniva usato solo per d-none
+                        modello.before(clone);
+                        }
+                    }
+                    else{
+                        alert(result.message);
+                    }
+                });
+
+        }
+
+        function dettagli(event){
+            let id=event.target.value;
+            localStorage.setItem("idPiatto",id);
+            window.location.replace("dettagliPiatto.html");
+        }
+
+        function modifica(event){
+            let id=event.target.value;
+            localStorage.setItem("idPiatto",id);
+            window.location.replace("modificaPiatto.html");
+        }
+
+
 
         function logout(){
             localStorage.clear();

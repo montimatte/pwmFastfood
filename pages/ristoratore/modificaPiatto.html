@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aggiungi Piatto</title>
+    <title>Modifica Piatto</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
 </head>
@@ -36,12 +36,16 @@
     </div>
     </nav>
 
+    <div class="mt-4">
+        <a href="menu.html"><button class="btn btn-outline-primary">Indietro</button></a>
+    </div>
+
     <div class="container">
         <div class="row">
             <div class="col"></div>
             <div class="col">
                 <div id="form">
-                    <form onsubmit="aggiungi(event)">
+                    <form onsubmit="modificaPiatto(event)">
                         <div class="mb-3">
                             <label for="nome" class="form-label">Nome</label>
                             <input type="text" class="form-control" id="nome" required>
@@ -74,12 +78,12 @@
                         </div>
 
                         <div class="d-flex justify-content-center">
-                            <button type="submit" class="btn btn-primary">Aggiungi</button>
+                            <button id="btnModifica" type="submit" class="btn btn-primary">Modifica</button>
                         </div>
                     </form>
                 </div>
                 <div class="mt-5 d-flex justify-content-center">
-                    <a href="aggiungiPiatto.html"><button class="btn btn-outline-primary">Indietro</button></a>
+                   <button id="btnCancella" onclick="cancellaPiatto(event)" class="btn btn-outline-danger">Cancella</button>
                 </div>
             </div>
             <div class="col"></div>
@@ -107,30 +111,53 @@
                         window.location.replace("creaRistorante.html");
                     }
                 });
+
+            //l'utente viene rimandato al menù se non c'è nessun piatto di cui modificare i dettagli
+            if(!localStorage.getItem("idPiatto")){
+                window.location.replace("menu.html");
+            }
         
                 caricaDati();
 
         });
 
         function caricaDati(){
-            //se nella localStorage ci sono i dati di un piatto li metto nel form
-            const piatto= JSON.parse(localStorage.getItem("piatto"));
-            if(piatto){
-                document.getElementById("nome").value=piatto.nome;
-                document.getElementById("categoria").value=piatto.categoria;
-                document.getElementById("prezzo").value=piatto.prezzo;
-                document.getElementById("img").value=piatto.img;
-                let ingredienti=piatto.ingredienti;
-                ingredienti=ingredienti.replace(/<br>/g, ", ");
-                document.getElementById("ingredienti").innerText=ingredienti;
-                document.getElementById("ricetta").innerText=piatto.ricetta;
-                
-            }
-            localStorage.removeItem("piatto");
+            let id=localStorage.getItem("idPiatto");
+           fetch(`http://server-t410:3000/piatto/${id}`)
+                .then(response => response.json())
+                .then(result => {
+                    console.log(result);
+                    if(result.success===true){
+                        let piatto=JSON.parse(result.piatto);
+                        document.getElementById("nome").value=piatto.nome;
+                        document.getElementById("categoria").value=piatto.categoria;
+                        document.getElementById("prezzo").value=piatto.prezzo;
+                        document.getElementById("img").value=piatto.img;
+                        //metto assieme ingredienti
+                        let str="";
+                        for(let i=0;i<piatto.ingredienti.length;i++){
+                            str+=piatto.ingredienti[i]+", ";
+                        }
+                        document.getElementById("ingredienti").innerText=str;
+                        document.getElementById("ricetta").innerText=piatto.ricetta;
+
+                        document.getElementById("btnModifica").value=id;
+                        document.getElementById("btnCancella").value=id;
+
+                    }
+                    else{
+                        alert(result.message);
+                    }
+                });
+            
+                localStorage.removeItem("idPiatto");
         }
 
-        async function aggiungi(event){
+
+        async function modificaPiatto(event) {
             event.preventDefault(); //blocca il refresh della pagina
+            let id=document.getElementById("btnModifica").value;
+            console.log(id);
 
             const nome=document.getElementById("nome").value;
             const categoria=document.getElementById("categoria").value;
@@ -139,15 +166,6 @@
             const ingredienti=document.getElementById("ingredienti").value;
             const ricetta=document.getElementById("ricetta").value;
             let idRistorante;
-
-            const piatto={
-                nome: nome,
-                categoria: categoria,
-                img: img,
-                prezzo: prezzo,
-                ingredienti: ingredienti,
-                ricetta: ricetta
-            }
 
             const proprietario= localStorage.getItem("auth");
             await fetch(`http://server-t410:3000/ristorante/${proprietario}`) //l'await server per essere sicuri che prima di inserire il piatto io abbia l'id del ristorante
@@ -164,26 +182,61 @@
                 });
 
 
+            const piatto={
+                nome: nome,
+                categoria: categoria,
+                img: img,
+                prezzo: prezzo,
+                ingredienti: ingredienti,
+                ricetta: ricetta,
+                id_ristorante: idRistorante
+            }
+            console.log(piatto);
+
             const options = {
-                method: "POST",
+                method: "PUT",
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(piatto)
             };
 
-            fetch(`http://server-t410:3000/piatto/${idRistorante}`, options)
+            fetch(`http://server-t410:3000/piatto/${id}`, options)
                 .then(response => response.json())
                 .then(result => {
                     console.log(result);
                     if(result.success===true){
-                        window.location.replace("menu.html");
+                        window.location.replace("menu.html"); //se la modifica va a buon fine si viene rendirizzati al menù
                     }
                     else{
                         alert(result.message);
                     }
                 });
+        }
 
+        function cancellaPiatto(event){
+            if (confirm("Sei sicuro di voler procedere?") == true) {
+                let id=event.target.value;
+
+                const options = {
+                    method: "DELETE",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                };
+
+                fetch(`http://server-t410:3000/piatto/${id}`, options)
+                    .then(response => response.json())
+                    .then(result => {
+                        console.log(result);
+                        if(result.success===true){
+                            window.location.replace(`menu.html`); //se la cancellazione va a buon fine si viene rendirizzati al menù
+                        }
+                        else{
+                            alert(result.message);
+                        }
+                    });
+            }
         }
 
         function logout(){

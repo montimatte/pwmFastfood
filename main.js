@@ -437,6 +437,133 @@ app.post('/piatto/:ristorante', async (req, res) => {
     res.send();
 });
 
+app.get('/piatti/:ristorante', async (req, res) => {
+    const id = req.params.ristorante;
+    try {
+        const client = await MongoClient.connect(mongoURL);
+        const coll = client.db('Fastfood').collection('piatto');
+        const cursor = coll.find({id_ristorante: id});
+        const result = await cursor.toArray();
+        await client.close();
+        if(result.length==0){
+            console.log("Nessun piatto trovato");
+            res.status(404).json({success: false, message: "Nessun piatto trovato"});
+        }
+        else{
+            console.log("Piatti trovati:");
+            console.log(result);
+            res.status(200).json({success: true, message: "Piatti trovati", piatti: JSON.stringify(result)});
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Errore non gestito" });
+    }
+})
+
+app.get('/piatto/:id', async (req, res) => {
+    const id = new ObjectID(req.params.id);
+    try {
+        const client = await MongoClient.connect(mongoURL);
+        const coll = client.db('Fastfood').collection('piatto');
+        const cursor = coll.find({_id: id});
+        const result = await cursor.toArray();
+        await client.close();
+        if(result.length==0){
+            console.log("Piatto non trovato");
+            res.status(404).json({success: false, message: "Piatto non trovato"});
+        }
+        else{
+            console.log("Piatto trovato:");
+            console.log(result[0]);
+            res.status(200).json({success: true, message: "Piatto Trovato", piatto: JSON.stringify(result[0])});
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Errore non gestito" });
+    }
+})
+
+app.put('/piatto/:id', async (req, res) => {
+    const nome = req.body.nome;
+    const categoria = req.body.categoria;
+    const prezzo = req.body.prezzo;
+    const img = req.body.img;
+    const ingredienti = req.body.ingredienti;
+    const ricetta = req.body.ricetta;
+    const ristorante = req.body.id_ristorante;
+    let id=new ObjectID(req.params.id);
+
+    if (nome.length < 3) {
+        console.log("Campo non valido");
+        res.status(401).json({success: false, message: "Nome troppo corto"});
+    }
+    if (categoria.length < 3) {
+        console.log("Campo non valido");
+        res.status(401).json({success: false, message: "Categoria non valida"});
+    }
+    if (prezzo < 0.5) {
+        console.log("Campo non valido");
+        res.status(401).json({success: false, message: "Prezzo non valido"});
+    }
+    if (img.length===0) {
+        console.log("Campo non valido");
+        res.status(401).json({success: false, message: "Link all'immagine non valido"});
+    }
+
+    //converto gli ingredienti in array
+    let arrIngredienti=ingredienti.replace(", ",",");
+    arrIngredienti=arrIngredienti.split(",");
+    if(arrIngredienti[arrIngredienti.length-1]==" "){ //rimuovo l'ultimo elemento se è vuoto
+        arrIngredienti.pop();
+    }
+
+    try {
+        const client = await MongoClient.connect(mongoURL);
+        const coll = client.db('Fastfood').collection('piatto');
+
+        const piatto = {
+            nome: nome,
+            categoria: categoria,
+            prezzo: prezzo,
+            img: img,
+            ingredienti: arrIngredienti,
+            ricetta: ricetta,
+            id_ristorante: ristorante
+        };
+
+        console.log("piatto da modificaer")
+        console.log(piatto);
+
+        const cursor = await coll.replaceOne({_id: id}, piatto); //sovrascrive tutti i dati (no ID) con quelli nuovi
+        await client.close();
+
+        console.log("Piatto modificato:");
+        res.status(200).json({success: true, message: "Piatto modificato"});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Errore non gestito" });
+    }
+    res.send();
+});
+
+app.delete('/piatto/:id', async (req, res) => {
+    const id = req.params.id;
+    try {
+        const client = await MongoClient.connect(mongoURL);
+        const coll = client.db('Fastfood').collection('piatto');
+        const result = await coll.deleteOne({_id: new ObjectID(id)});
+
+        console.log("Piatto cancellato:");
+        console.log(result);
+        res.status(200).json({success: true, message: "Piatto cancellato"});
+        await client.close();
+      
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Errore non gestito" });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
