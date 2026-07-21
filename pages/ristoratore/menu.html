@@ -18,13 +18,13 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-            <a class="nav-link" href="#" >Home</a>
+            <a class="nav-link" href="ristoratore.html" >Home</a>
             </li>
             <li class="nav-item">
             <a class="nav-link" href="creaRistorante.html">Ristorante</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="menu.html">Menù</a>
+            <a class="nav-link active" aria-current="page" href="#">Menù</a>
             </li>
             <li class="nav-item">
             <a class="nav-link" href="../account.html">Account</a>
@@ -40,6 +40,18 @@
     <div class="mt-4">
         <a href="aggiungiPiatto.html"><button class="btn btn-outline-primary">Aggiungi Piatto</button></a>
     </div>
+
+    <div class="row">
+        <div class="col-3">
+            <form onsubmit="cerca(event)">
+                <div class="mt-4 input-group">
+                    <input type="search" class="form-control rounded" placeholder="Cerca"/>
+                    <button type="submit" class="btn btn-outline-primary">Cerca</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="mt-2">
         <table class="table table-sm table-striped text-center align-middle">
         <tr>
@@ -107,6 +119,9 @@
                     console.log(result);
                     if(result.success===true){
                         const piatti=JSON.parse(result.piatti);
+
+                        piatti.sort((a, b) => a.categoria.localeCompare(b.categoria)); //ordina per categoria facendo una compare tra un elemento e il suo successivo
+                        
                         var modello = document.getElementById('modello');
 
                         for(let i=0;i<piatti.length;i++){
@@ -147,7 +162,28 @@
             window.location.replace("modificaPiatto.html");
         }
 
+        function cerca(event){
+            event.preventDefault(); //blocca il refresh della pagina
+            const form = event.target;
+            const query = (form.querySelector('input[type="search"]').value || '').trim().toLowerCase();
 
+            // seleziono tutte le righe della tabella
+            const rows = document.querySelectorAll('table tr');
+            rows.forEach(row => {
+                const cells = row.getElementsByTagName('td');
+                if(cells.length === 0) return; // salta intestazione
+                if(row.id === 'modello') return; // mantiene il modello nascosto
+
+                const nome = (cells[0].textContent || '').trim().toLowerCase();
+                const categoria = (cells[1].textContent || '').trim().toLowerCase();
+
+                if(query === '' || nome.includes(query) || categoria.includes(query)){
+                    row.classList.remove('d-none');
+                } else {
+                    row.classList.add('d-none');
+                }
+            });
+        }
 
         function logout(){
             localStorage.clear();

@@ -17,13 +17,13 @@
         <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
             <li class="nav-item">
-            <a class="nav-link" href="#" >Home</a>
+            <a class="nav-link" href="ristoratore.html" >Home</a>
             </li>
             <li class="nav-item">
             <a class="nav-link" href="creaRistorante.html">Ristorante</a>
             </li>
             <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="menu.html">Menù</a>
+            <a class="nav-link active" aria-current="page" href="#">Menù</a>
             </li>
             <li class="nav-item">
             <a class="nav-link" href="../account.html">Account</a>
@@ -40,13 +40,25 @@
         <a href="menu.html"><button class="btn btn-outline-primary">Indietro</button></a>
         <a href="aggiungiCustom.html"><button class="btn btn-outline-primary">Aggiungi Piatto Personalizzato</button></a>
     </div>
+
+    <div class="row">
+        <div class="col-3">
+            <form onsubmit="cerca(event)">
+                <div class="mt-4 input-group">
+                    <input type="search" class="form-control rounded" placeholder="Cerca"/>
+                    <button type="submit" class="btn btn-outline-primary">Cerca</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <div class="row mt-3">
         <div id="modello" class="col-lg-4 col-md-6 d-none">
             <div class="card">
                 <img src="" class="card-img-top" alt="">
                 <div class="card-body">
-                    <h5 class="card-title"></h5>
-                    <p class="card-text"></p>
+                    <h5 class="card-title nome"></h5>
+                    <p class="card-text categoria"></p>
                     <p class="card-text"></p>
                     <p class="card-text"></p>
                     <button onclick="aggiungi(event)" class="btn btn-primary">Aggiungi al Menù</button>
@@ -128,6 +140,30 @@
             }
             localStorage.setItem("piatto",JSON.stringify(piatto));
             window.location.replace("aggiungiCustom.html");
+
+        }
+
+        function cerca(event){
+            event.preventDefault(); //blocca il refresh della pagina
+            const form = event.target;
+            const input = form.querySelector('input[type="search"]');
+            if(!input) return;
+            const q = input.value.trim().toLowerCase();
+
+            // seleziona tutte le card (sono contenute in colonne)
+            const cols = document.querySelectorAll('.row .col-lg-4.col-md-6');
+            cols.forEach(col => {
+                // se il modello nascosto (d-none) lo saltiamo
+                if(col.classList.contains('d-none')) return;
+                const title = col.getElementsByClassName("nome")[0].innerHTML.toLowerCase();
+                const cat = col.getElementsByClassName("categoria")[0].innerHTML.toLowerCase();
+
+                if(q === '' || title.includes(q) || cat.includes(q)){
+                    col.style.display = '';
+                } else {
+                    col.style.display = 'none';
+                }
+            });
 
         }
 
