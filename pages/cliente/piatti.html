@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ricerca Piatti</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Fast Food</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+            <a class="nav-link" href="cliente.html">Home</a>
+            </li>
+            <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle active" aria-current="page" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Cerca
+            </a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="ristoranti.html">Ristorante</a></li>
+                <li><a class="dropdown-item" href="#">Piatto</a></li>
+            </ul>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="carrello.html">Carrello</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="storico.html">Storico Ordini</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="../account.html">Account</a>
+            </li>
+        </ul>
+        <div class="d-flex">
+            <button class="btn btn-outline-secondary" onclick="logout()">Logout</button>
+        </form>
+        </div>
+    </div>
+    </nav>
+
+    <div class="row">
+        <div class="col-4">
+            <form onsubmit="cerca(event)">
+                <div class="mt-4 input-group">
+                    <input id="nomeCat" type="search" class="form-control rounded" placeholder="Nome/Categoria"/>
+                    <input id="prezzo" type="search" class="form-control rounded" placeholder="Prezzo"/>
+                    <button type="submit" class="btn btn-outline-primary">Cerca</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="row mt-3">
+        <div id="modello" class="col-lg-4 col-md-6 d-none">
+            <div class="card mt-3">
+                <img src="" class="card-img-top" alt="">
+                <div class="card-body">
+                    <h5 class="card-title nome"></h5>
+                    <p class="card-text categoria"></p>
+                    <p class="card-text prezzo"></p>
+                    <p class="card-text ristorante"></p>
+                    <button class="btn btn-sm btn-outline-success" onclick="aggiungi(event)">+</button>
+                    <button class="btn btn-sm btn-outline-danger" onclick="rimuovi(event)">-</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
+    crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", ()=>{
+            //se l'utente non è autenticato viene mandato alla login
+            if(localStorage.getItem("auth")===null || localStorage.getItem("accType")!="cliente"){
+                localStorage.clear();
+                window.location.replace("../../index.html");
+            }
+            
+            getRistoranti();
+        });
+
+        function getRistoranti(){
+            fetch(`http://server-t410:3000/ristoranti`)
+                .then(response => response.json())
+                .then(result => {
+                    console.log(result);
+                    if(result.success===true){
+                        const ristoranti=JSON.parse(result.rest);
+                        for(let i=0;i<ristoranti.length;i++){
+                            let ristorante = ristoranti[i];
+                            fetch(`http://server-t410:3000/piatti/${ristorante._id}`)
+                            .then(response => response.json())
+                            .then(result => {
+                                console.log(result);
+                                if(result.success===true){
+                                    let modello=document.getElementById("modello");
+                                    const piatti=JSON.parse(result.piatti);
+                                    for(let j=0;j<piatti.length;j++){
+                                        let clone = modello.cloneNode(true);
+                                        let piatto = piatti[j];
+
+                                        clone.getElementsByClassName('card-title')[0].innerHTML += piatto.nome;
+                                        clone.getElementsByClassName('card-text')[0].innerHTML += piatto.categoria;
+                                        clone.getElementsByClassName('card-text')[1].innerHTML += piatto.prezzo;
+                                        clone.getElementsByClassName('card-text')[2].innerHTML += `${ristorante.nome} (${ristorante.indirizzo} - ${ristorante.citta})`;
+                                        clone.getElementsByTagName('img')[0].src = piatto.img;
+
+                                        clone.classList.remove('d-none');
+                                        clone.id = j;
+                                        modello.before(clone);
+                                    }
+                                }
+                                else{
+                                    alert(result.message);
+                                }
+                            });
+                        }
+                    }  
+                    else{
+                        alert(result.message);
+                    }
+                });
+            }
+
+        function aggiungi(event){
+
+        }
+
+        function rimuovi(event){
+
+        }
+
+        function cerca(event){
+            event.preventDefault(); //blocca il refresh della pagina
+            const nomeCat = document.getElementById("nomeCat");
+            const prezzo = document.getElementById("prezzo");
+            let q = nomeCat.value.trim().toLowerCase();
+            let p = prezzo.value.trim();
+
+            // seleziona tutte le card (sono contenute in colonne)
+            const cols = document.querySelectorAll('.row .col-lg-4.col-md-6');
+            cols.forEach(col => {
+                // se il modello nascosto (d-none) lo saltiamo
+                if(col.classList.contains('d-none')) return;
+                const title = col.getElementsByClassName("nome")[0].innerHTML.toLowerCase();
+                const cat = col.getElementsByClassName("categoria")[0].innerHTML.toLowerCase();
+                const price = parseInt(col.getElementsByClassName("prezzo")[0].innerHTML);
+
+                let matchQuery = q === '' || title.includes(q) || cat.includes(q); //è un match se la la stringa è vuota oppure è contenuta dentro i campi
+                let matchPrice = p === '' || price <= parseInt(p); //è un match se il valore è vuoto o se il prezzo del piatto è inferiore
+
+                if(matchQuery && matchPrice){
+                    col.style.display = '';
+                } else {
+                    col.style.display = 'none';
+                }
+            });
+
+        }
+
+        function logout(){
+            localStorage.clear();
+            window.location.replace("../../index.html");
+        }
+
+    </script>
+</body>
+</html>

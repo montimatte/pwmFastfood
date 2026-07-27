@@ -11,7 +11,7 @@
 <body>
 <nav class="navbar navbar-expand-lg bg-body-tertiary">
   <div class="container-fluid">
-    <a class="navbar-brand" href="#">Navbar</a>
+    <a class="navbar-brand" href="#">Fast Food</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -20,19 +20,20 @@
         <li class="nav-item">
           <a class="nav-link active" aria-current="page" href="#">Home</a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#">Link</a>
-        </li>
         <li class="nav-item dropdown">
           <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-            Dropdown
+            Cerca
           </a>
           <ul class="dropdown-menu">
-            <li><a class="dropdown-item" href="#">Action</a></li>
-            <li><a class="dropdown-item" href="#">Another action</a></li>
-            <li><hr class="dropdown-divider"></li>
-            <li><a class="dropdown-item" href="#">Something else here</a></li>
+            <li><a class="dropdown-item" href="ristoranti.html">Ristorante</a></li>
+            <li><a class="dropdown-item" href="piatti.html">Piatto</a></li>
           </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="carrello.html">Carrello</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="storico.html">Storico Ordini</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="../account.html">Account</a>
@@ -45,20 +46,23 @@
   </div>
 </nav>
 
-<script>
-    document.addEventListener("DOMContentLoaded", ()=>{
-        //se l'utente non è autenticato viene mandato alla login
-        if(localStorage.getItem("auth")===null || localStorage.getItem("accType")!="cliente"){
-            localStorage.clear();
-            window.location.replace("../../index.html");
-        }
-    });
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
+    crossorigin="anonymous"></script>
+  <script>
+      document.addEventListener("DOMContentLoaded", ()=>{
+          //se l'utente non è autenticato viene mandato alla login
+          if(localStorage.getItem("auth")===null || localStorage.getItem("accType")!="cliente"){
+              localStorage.clear();
+              window.location.replace("../../index.html");
+          }
+      });
 
-    function logout(){
-        localStorage.clear();
-        window.location.replace("../../index.html");
-    }
+      function logout(){
+          localStorage.clear();
+          window.location.replace("../../index.html");
+      }
 
-</script>
+  </script>
 </body>
 </html>

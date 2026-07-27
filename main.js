@@ -373,6 +373,28 @@ app.delete('/ristorante/:ristoratore', async (req, res) => {
     }
 })
 
+app.get('/ristoranti/', async (req, res) => {
+    try {
+        const client = await MongoClient.connect(mongoURL);
+        const coll = client.db('Fastfood').collection('ristorante');
+        const cursor = coll.find();
+        const result = await cursor.toArray();
+        await client.close();
+        if(result.length==0){
+            console.log("Nessun ristorante non trovato");
+            res.status(404).json({success: false, message: "Nessun ristorante non trovato"});
+        }
+        else{
+            console.log("Ristoranti trovati:");
+            console.log(result);
+            res.status(200).json({success: true, message: "Ristoranti Trovati", rest: JSON.stringify(result)});
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Errore non gestito" });
+    }
+})
+
 //===================PIATTO===================\\
 app.post('/piatto/:ristorante', async (req, res) => {
     const nome = req.body.nome;
