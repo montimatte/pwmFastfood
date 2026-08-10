@@ -95,7 +95,7 @@
 
             //carico i dati del form
             const id = localStorage.getItem("auth");
-            fetch(`http://server-t410:3000/ristorante/${id}`)
+            fetch(`http://localhost:3000/ristorante/${id}`)
                 .then(response => response.json())
                 .then(result => {
                     console.log(result);
@@ -142,7 +142,7 @@
                 body: JSON.stringify(rest)
             };
 
-            fetch(`http://server-t410:3000/ristorante/${proprietario}`, options)
+            fetch(`http://localhost:3000/ristorante/${proprietario}`, options)
                 .then(response => response.json())
                 .then(result => {
                     console.log(result);
@@ -166,7 +166,7 @@
                     }
                 };
 
-                fetch(`http://server-t410:3000/ristorante/${id}`, options)
+                fetch(`http://localhost:3000/ristorante/${id}`, options)
                     .then(response => response.json())
                     .then(result => {
                         console.log(result);

@@ -87,7 +87,7 @@
             
             //l'utente viene rendirizzato alla pagine di creazione se non ha ancora creato il ristorante
             const proprietario= localStorage.getItem("auth");
-            fetch(`http://server-t410:3000/ristorante/${proprietario}`)
+            fetch(`http://localhost:3000/ristorante/${proprietario}`)
                 .then(response => {
                     console.log(response.status);
                     if(response.status===404){
@@ -100,7 +100,7 @@
 
         async function caricaMenu(){
             const proprietario= localStorage.getItem("auth");
-            await fetch(`http://server-t410:3000/ristorante/${proprietario}`) //l'await server per essere sicuri che prima di inserire il piatto io abbia l'id del ristorante
+            await fetch(`http://localhost:3000/ristorante/${proprietario}`) //l'await server per essere sicuri che prima di inserire il piatto io abbia l'id del ristorante
                 .then(response => response.json())
                 .then(result => {
                     console.log(result);
@@ -113,7 +113,7 @@
                     }
                 });
 
-            fetch(`http://server-t410:3000/piatti/${idRistorante}`)
+            fetch(`http://localhost:3000/piatti/${idRistorante}`)
                 .then(response => response.json())
                 .then(result => {
                     console.log(result);

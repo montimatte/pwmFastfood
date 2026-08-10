@@ -110,7 +110,7 @@
 
             //carico i dati del form
             const id = localStorage.getItem("auth");
-            fetch(`http://server-t410:3000/user/${id}`)
+            fetch(`http://localhost:3000/user/${id}`)
                 .then(response => response.json())
                 .then(result => {
                     console.log(result);
@@ -179,7 +179,7 @@
                 body: JSON.stringify(user)
             };
 
-            fetch(`http://server-t410:3000/user/${id}`, options)
+            fetch(`http://localhost:3000/user/${id}`, options)
                 .then(response => response.json())
                 .then(result => {
                     console.log(result);
@@ -203,7 +203,7 @@
                     }
                 };
 
-                fetch(`http://server-t410:3000/user/${id}`, options)
+                fetch(`http://localhost:3000/user/${id}`, options)
                     .then(response => response.json())
                     .then(result => {
                         console.log(result);

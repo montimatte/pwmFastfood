@@ -132,7 +132,7 @@
                 body: JSON.stringify(user)
             };
 
-            fetch("http://server-t410:3000/user", options)
+            fetch("http://localhost:3000/user", options)
                 .then(response => response.json())
                 .then(result => {
                     console.log(result);

@@ -81,7 +81,7 @@
             
             //l'utente viene rendirizzato alla pagine di creazione se non ha ancora creato il ristorante
             const proprietario= localStorage.getItem("auth");
-            fetch(`http://server-t410:3000/ristorante/${proprietario}`)
+            fetch(`http://localhost:3000/ristorante/${proprietario}`)
                 .then(response => {
                     console.log(response.status);
                     if(response.status===404){

@@ -77,8 +77,17 @@
             <td></td>
             <td><img class="thumb" src=""></td>
             <td>
-                <button class="btn btn-sm btn-outline-success" onclick="aggiungi(event)">+</button>
-                <button class="btn btn-sm btn-outline-danger" onclick="rimuovi(event)">-</button>
+                <div class="row d-inline-flex align-self-center">
+                    <div class="col">
+                        <button class="btn btn-sm btn-outline-success">+</button>
+                    </div>
+                    <div class="col">
+                        <p id="quantita">0</p>
+                    </div>
+                    <div class="col">
+                        <button class="btn btn-sm btn-outline-danger">-</button>
+                    </div>
+                </div>
             </td>
         </tr>
     </table>
@@ -96,7 +105,7 @@
             }
 
             //se non c'è nessun ristorante di cui visualizzare il menù l'utente viene mandato alla lista di ristoranti
-            if(localStorage.getItem["ristorante"]===null){
+            if(localStorage.getItem("ristorante")===null){
                 window.location.replace("ristoranti.html");
             }
             
@@ -104,9 +113,16 @@
         });
 
         function caricaMenu(){
+            let carrello = null;
+            try {
+                carrello = JSON.parse(localStorage.getItem("carrello"));
+            } catch (error) {
+                carrello = null;
+            }
+
             const idRistorante=localStorage.getItem("ristorante");
             console.log(idRistorante);
-            fetch(`http://server-t410:3000/piatti/${idRistorante}`)
+            fetch(`http://localhost:3000/piatti/${idRistorante}`)
                 .then(response => response.json())
                 .then(result => {
                     console.log(result);
@@ -118,22 +134,56 @@
                         var modello = document.getElementById('modello');
 
                         for(let i=0;i<piatti.length;i++){
-                        var clone = modello.cloneNode(true);
-                        var piatto = piatti[i];
+                            var clone = modello.cloneNode(true);
+                            var piatto = piatti[i];
+                            let idPiatto=piatto._id;
 
-                        clone.getElementsByTagName('td')[0].innerHTML += piatto.nome;
-                        clone.getElementsByTagName('td')[1].innerHTML += piatto.categoria;
-                        clone.getElementsByTagName('td')[2].innerHTML += piatto.prezzo;
-                        clone.getElementsByTagName('img')[0].src = piatto.img;
+                            clone.getElementsByTagName('td')[0].innerHTML += piatto.nome;
+                            clone.getElementsByTagName('td')[1].innerHTML += piatto.categoria;
+                            clone.getElementsByTagName('td')[2].innerHTML += piatto.prezzo;
+                            clone.getElementsByTagName('img')[0].src = piatto.img;
 
-                        let bottoni=clone.getElementsByTagName('button');
-                        for(let j=0;j<bottoni.length;j++){
-                            bottoni[j].value=piatto._id;
-                        }
+                            clone.getElementsByTagName('p')[0].id=idPiatto;
+                            try {
+                                //if per evitare valore undefined
+                                if(carrello[idRistorante][idPiatto]){
+                                    clone.getElementsByTagName('p')[0].innerHTML = carrello[idRistorante][idPiatto];
+                                }
+                            } catch (error) {
+                                //il valore di default è già 0, non serve fare nulla
+                            }
 
-                        clone.removeAttribute("id"); //rimuovo l'id per evitare conflitti
-                        clone.removeAttribute("class"); //rimuovo l'intero attributo perchè class veniva usato solo per d-none
-                        modello.before(clone);
+                            let bottoni=clone.getElementsByTagName('button');
+                            //ottengo il valore attuale, lo incremento e lo salvo sia nella label che nella localStorage
+                            bottoni[0].addEventListener("click", function(){
+                                let id=idPiatto;
+                                let label=document.getElementById(id);
+                                let q=parseInt(label.innerHTML);
+                                q++;
+                                label.innerHTML=q;
+                                carrello[idRistorante][idPiatto]=q;
+                                localStorage.setItem("carrello", JSON.stringify(carrello));
+                            });
+
+                            //ottengo il valore attuale, lo decremento (se>0) e lo salvo sia nella label che nella localStorage (lo rimuovo se==0)
+                            bottoni[1].addEventListener("click", function(){
+                                let id=idPiatto;
+                                let label=document.getElementById(id);
+                                let q=parseInt(label.innerHTML);
+                                if(q>0){
+                                    q--;
+                                    label.innerHTML=q;
+                                    carrello[idRistorante][idPiatto]=q;
+                                }
+                                if(q==0){
+                                    delete carrello[idRistorante][idPiatto];
+                                }
+                                localStorage.setItem("carrello", JSON.stringify(carrello));
+                            });
+
+                            clone.removeAttribute("id"); //rimuovo l'id per evitare conflitti
+                            clone.removeAttribute("class"); //rimuovo l'intero attributo perchè class veniva usato solo per d-none
+                            modello.before(clone);
                         }
                     }
                     else{
@@ -143,13 +193,6 @@
 
         }
 
-        function aggiungi(event){
-
-        }
-
-        function rimuovi(event){
-
-        }
 
         function cerca(event){
             event.preventDefault(); //blocca il refresh della pagina
