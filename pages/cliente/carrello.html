@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrello</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+
+</head>
+<body>
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Fast Food</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" aria-current="page" href="cliente.html">Home</a>
+        </li>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Cerca
+          </a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="ristoranti.html">Ristorante</a></li>
+            <li><a class="dropdown-item" href="piatti.html">Piatto</a></li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link active" href="#">Carrello</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="storico.html">Storico Ordini</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="../account.html">Account</a>
+        </li>
+      </ul>
+      <div class="d-flex">
+        <button class="btn btn-outline-secondary" onclick="logout()">Logout</button>
+      </form>
+    </div>
+  </div>
+</nav>
+
+<hr> <!--divisore-->
+
+<nav class="navbar bg-body-tertiary">
+    <div class="container-fluid justify-content-end">
+    <button class="btn btn-outline-danger me-2" type="button">Cancella Ordine</button>
+    <button class="btn btn-outline-success me-2" type="button">Conferma Ordine</button>
+    <div class="d-flex align-items-center">
+        <h5 id="totale">Totale: 0</h5>
+    </div>
+    </div>
+</nav>
+
+    <div class="container">
+        <div id="modello" class="card mt-4 d-none">
+            <h5 class="card-header">Ristorante</h5>
+            <div class="card-body">
+                <ul>
+                </ul>
+                <div class="card-footer text-end">
+                    <h5>Totale: 0</h5>
+                    <a href="#" class="btn btn-outline-danger mt-2">Cancella Ordine</a> 
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
+    crossorigin="anonymous"></script>
+  <script>
+        document.addEventListener("DOMContentLoaded", ()=>{
+          //se l'utente non è autenticato viene mandato alla login
+          if(localStorage.getItem("auth")===null || localStorage.getItem("accType")!="cliente"){
+              localStorage.clear();
+              window.location.replace("../../index.html");
+          }
+          test();
+        });
+
+      async function test(){
+        let carrello=JSON.parse(localStorage.getItem("carrello"));
+        if(carrello){
+            let sub=0;
+            let tot=0;
+            var modello = document.getElementById('modello');
+            // per ogni ristorante presente nel carrello ottengo i relativi piatti e gestisco i dati nel DOM
+            for (const idRist in carrello) {   
+                var clone = modello.cloneNode(true);
+
+                const objRest = carrello[idRist];
+
+                await fetch(`http://localhost:3000/ristoranti/${idRist}`)
+                .then(response => response.json())
+                .then(result => {
+                    console.log(result);
+                    if(result.success===true){
+                        const ristorante=JSON.parse(result.rest);
+                        clone.getElementsByTagName('h5')[0].innerHTML = `${ristorante.nome} (${ristorante.indirizzo} - ${ristorante.citta}) `;
+                    }  
+                    else{
+                        alert(result.message);
+                    }
+                });
+                
+                let lista=clone.getElementsByTagName("ul")[0];
+                for (const idPiatto in objRest) {                    
+                    const objPiatto = objRest[idPiatto];
+                    await fetch(`http://localhost:3000/piatto/${idPiatto}`)
+                    .then(response => response.json())
+                    .then(result => {
+                        console.log(result);
+                        if(result.success===true){
+                            const piatto=JSON.parse(result.piatto);
+
+                            let el=document.createElement("li");
+                            el.classList.add("card-text");
+                            el.innerHTML=`${piatto.nome} (${piatto.prezzo})`;
+
+                            lista.appendChild(el);
+                            sub+=piatto.prezzo*objPiatto;
+                        }  
+                        else{
+                            alert(result.message);
+                        }
+                    });
+                }
+                clone.getElementsByTagName('h5')[1].innerHTML = "Totale: "+sub;
+                tot+=sub;
+
+                clone.classList.remove("d-none");
+                modello.before(clone);
+            }
+            document.getElementById("totale").innerHTML="Totale: "+tot;
+        }
+      }
+
+      function logout(){
+          localStorage.clear();
+          window.location.replace("../../index.html");
+      }
+
+  </script>
+</body>
+</html>

@@ -79,13 +79,13 @@
             <td>
                 <div class="row d-inline-flex align-self-center">
                     <div class="col">
-                        <button class="btn btn-sm btn-outline-success">+</button>
+                        <button class="btn btn-sm btn-outline-danger">-</button>
                     </div>
                     <div class="col">
                         <p id="quantita">0</p>
                     </div>
                     <div class="col">
-                        <button class="btn btn-sm btn-outline-danger">-</button>
+                        <button class="btn btn-sm btn-outline-success">+</button>
                     </div>
                 </div>
             </td>
@@ -113,15 +113,24 @@
         });
 
         function caricaMenu(){
-            let carrello = null;
+            const idRistorante=localStorage.getItem("ristorante");
+            console.log(idRistorante);
+
+            //provo ad ottenere il carrello dalla localstorage, se è null imposto sia l'oggetto, che l'attributo ristorante in modo da non ottenere accessi illegali
+            let carrello;
             try {
                 carrello = JSON.parse(localStorage.getItem("carrello"));
             } catch (error) {
                 carrello = null;
             }
 
-            const idRistorante=localStorage.getItem("ristorante");
-            console.log(idRistorante);
+            if (carrello === null) {
+                carrello = {};
+            }
+            if (!carrello[idRistorante]) {
+                carrello[idRistorante] = {};
+            }
+
             fetch(`http://localhost:3000/piatti/${idRistorante}`)
                 .then(response => response.json())
                 .then(result => {
@@ -144,29 +153,14 @@
                             clone.getElementsByTagName('img')[0].src = piatto.img;
 
                             clone.getElementsByTagName('p')[0].id=idPiatto;
-                            try {
-                                //if per evitare valore undefined
-                                if(carrello[idRistorante][idPiatto]){
-                                    clone.getElementsByTagName('p')[0].innerHTML = carrello[idRistorante][idPiatto];
-                                }
-                            } catch (error) {
-                                //il valore di default è già 0, non serve fare nulla
+                            if (carrello[idRistorante] && carrello[idRistorante][idPiatto] !== undefined) {
+                                clone.getElementsByTagName('p')[0].innerHTML = carrello[idRistorante][idPiatto];
                             }
 
                             let bottoni=clone.getElementsByTagName('button');
-                            //ottengo il valore attuale, lo incremento e lo salvo sia nella label che nella localStorage
-                            bottoni[0].addEventListener("click", function(){
-                                let id=idPiatto;
-                                let label=document.getElementById(id);
-                                let q=parseInt(label.innerHTML);
-                                q++;
-                                label.innerHTML=q;
-                                carrello[idRistorante][idPiatto]=q;
-                                localStorage.setItem("carrello", JSON.stringify(carrello));
-                            });
 
                             //ottengo il valore attuale, lo decremento (se>0) e lo salvo sia nella label che nella localStorage (lo rimuovo se==0)
-                            bottoni[1].addEventListener("click", function(){
+                            bottoni[0].addEventListener("click", function(){
                                 let id=idPiatto;
                                 let label=document.getElementById(id);
                                 let q=parseInt(label.innerHTML);
@@ -178,6 +172,16 @@
                                 if(q==0){
                                     delete carrello[idRistorante][idPiatto];
                                 }
+                                localStorage.setItem("carrello", JSON.stringify(carrello));
+                            });
+                            //ottengo il valore attuale, lo incremento e lo salvo sia nella label che nella localStorage
+                            bottoni[1].addEventListener("click", function(){
+                                let id=idPiatto;
+                                let label=document.getElementById(id);
+                                let q=parseInt(label.innerHTML);
+                                q++;
+                                label.innerHTML=q;
+                                carrello[idRistorante][idPiatto]=q;
                                 localStorage.setItem("carrello", JSON.stringify(carrello));
                             });
 
