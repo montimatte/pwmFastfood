@@ -50,8 +50,8 @@
 
 <nav class="navbar bg-body-tertiary">
     <div class="container-fluid justify-content-end">
-    <button class="btn btn-outline-danger me-2" type="button">Cancella Ordine</button>
-    <button class="btn btn-outline-success me-2" type="button">Conferma Ordine</button>
+    <button class="btn btn-outline-danger me-2" onclick="svuota()">Svuota Carrello</button>
+    <button class="btn btn-outline-success me-2" onclick="ordina()">Conferma Ordini</button>
     <div class="d-flex align-items-center">
         <h5 id="totale">Totale: 0</h5>
     </div>
@@ -66,7 +66,7 @@
                 </ul>
                 <div class="card-footer text-end">
                     <h5>Totale: 0</h5>
-                    <a href="#" class="btn btn-outline-danger mt-2">Cancella Ordine</a> 
+                    <button class="btn btn-outline-danger mt-2" onclick="cancella(event)">Cancella Ordine</button> 
                 </div>
             </div>
         </div>
@@ -83,17 +83,18 @@
               localStorage.clear();
               window.location.replace("../../index.html");
           }
-          test();
+          getCarrello();
         });
 
-      async function test(){
+      async function getCarrello(){
         let carrello=JSON.parse(localStorage.getItem("carrello"));
         if(carrello){
             let sub=0;
             let tot=0;
             var modello = document.getElementById('modello');
             // per ogni ristorante presente nel carrello ottengo i relativi piatti e gestisco i dati nel DOM
-            for (const idRist in carrello) {   
+            for (const idRist in carrello) {
+                sub=0;   
                 var clone = modello.cloneNode(true);
 
                 const objRest = carrello[idRist];
@@ -123,7 +124,7 @@
 
                             let el=document.createElement("li");
                             el.classList.add("card-text");
-                            el.innerHTML=`${piatto.nome} (${piatto.prezzo})`;
+                            el.innerHTML=`${objPiatto}x ${piatto.nome} (${piatto.prezzo})`;
 
                             lista.appendChild(el);
                             sub+=piatto.prezzo*objPiatto;
@@ -133,7 +134,9 @@
                         }
                     });
                 }
+                clone.getElementsByTagName("button")[0].value=idRist;
                 clone.getElementsByTagName('h5')[1].innerHTML = "Totale: "+sub;
+				clone.getElementsByTagName('h5')[1].id = idRist;
                 tot+=sub;
 
                 clone.classList.remove("d-none");
@@ -142,6 +145,121 @@
             document.getElementById("totale").innerHTML="Totale: "+tot;
         }
       }
+
+      function cancella(event){
+        if(confirm("Sei sicuro di voler procedere?")==true){
+          let carrello=JSON.parse(localStorage.getItem("carrello"));
+          let idRist=event.target.value;
+          delete carrello[idRist];
+          localStorage.setItem("carrello",JSON.stringify(carrello));
+          window.location.reload();
+        }
+      }
+
+      function svuota(){
+        if(confirm("Sei sicuro di voler procedere?")==true){
+          localStorage.removeItem("carrello");
+          window.location.reload();
+        }
+      }
+
+      async function ordina(){
+        //se non sono inseriti i dati della carta di credito mostro un alert
+        const id = localStorage.getItem("auth");
+        await fetch(`http://localhost:3000/user/${id}`)
+            .then(response => response.json())
+            .then(result => {
+                console.log(result);
+                if(result.success===true){
+                    const user= JSON.parse(result.user);
+
+					if(user.ncarta==""||user.datacarta==""||user.cvvcarta==""){
+						alert("I dati della carta non sono completi, inseriscili nella pagina Account!");
+						return;
+					}
+                }                    
+                else{
+                    alert(result.message);
+                }
+            });
+
+			const carrello=JSON.parse(localStorage.getItem("carrello"));
+			for (const idRist in carrello) {
+				const user=localStorage.getItem("auth");
+				const tot=parseFloat(document.getElementById(idRist).innerHTML.split(":")[1].trim()); //prendo il totale del ristorante e rimuovo la parte stringa
+				const piatti=carrello[idRist];
+				let ritiro;
+
+				//calcolo il tempo di attesa per l'ordine (10min per ordine in coda)
+				const filter={
+					id_ristorante: idRist,
+					$or:[{stato:"ordinato"},{stato:"in preparazione"}]
+				};
+
+				let options = {
+					method: "POST",
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(filter)
+				};
+
+				await fetch("http://localhost:3000/ordini", options)
+					.then(response => response.json())
+					.then(result => {
+						console.log(result);
+						if(result.success===true){
+							const ordini=JSON.parse(result.ord);
+
+							//ottengo l'ora corrente, aggiungo i minuti di attesa ed estraggo l'ora e i minuti in due cifre
+							const attesa = 10 + (10 * ordini.length);
+							const ritiroDate = new Date();
+							ritiroDate.setMinutes(ritiroDate.getMinutes() + attesa);
+							const opzioniFormato = { hour: '2-digit', minute: '2-digit' };
+							ritiro = ritiroDate.toLocaleTimeString('it-IT', opzioniFormato);
+
+							console.log(ordini.length);
+							console.log(attesa);
+							console.log(ritiro);
+						}
+						else{
+							alert(result.message);
+						}
+					});
+
+				const ordine={
+					id_utente: user,
+					id_ristorante: idRist,
+					stato: "ordinato",
+					piatti: piatti,
+					totale: tot,
+					ora_ritiro: ritiro
+				};
+
+				options = {
+					method: "POST",
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(ordine)
+				};
+
+				fetch("http://localhost:3000/ordine", options)
+					.then(response => response.json())
+					.then(result => {
+						console.log(result);
+						if(result.success===true){
+							localStorage.removeItem("carrello");
+							window.location.replace("cliente.html");
+						}
+						else{
+							alert(result.message);
+						}
+					});
+
+					
+			}
+      	}
 
       function logout(){
           localStorage.clear();

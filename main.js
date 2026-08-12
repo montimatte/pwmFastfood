@@ -611,6 +611,51 @@ app.delete('/piatto/:id', async (req, res) => {
     }
 });
 
+//===================ORDINI===================\\
+
+//uso post per poter passare il filtro nel body
+app.post('/ordini/', async (req, res) => {
+    const filter=req.body;
+    try {
+        const client = await MongoClient.connect(mongoURL);
+        const coll = client.db('Fastfood').collection('ordine');
+        const cursor = coll.find(filter);
+        const result = await cursor.toArray();
+        await client.close();
+        if(result.length==0){
+            console.log("Nessun ordine trovato");
+            //404 non è un errore in questo caso, perciò restituisco un array vuoto
+            res.status(404).json({success: true, message: "Nessun ordine trovato", ord: JSON.stringify([])});
+        }
+        else{
+            console.log("Ordini trovati:");
+            console.log(result);
+            res.status(200).json({success: true, message: "Ordini Trovati", ord: JSON.stringify(result)});
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Errore non gestito" });
+    }
+})
+
+app.post('/ordine/', async (req, res) => {
+    const ordine = req.body;
+    try {
+        const client = await MongoClient.connect(mongoURL);
+        const coll = client.db('Fastfood').collection('ordine');
+        const result = await coll.insertOne(ordine);
+        console.log("Ordine Creato:");
+        console.log(result);
+        res.status(201).json({success: true, message: "Ordine Creato"});
+        await client.close();
+      
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Errore non gestito" });
+    }
+    res.send();
+});
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })

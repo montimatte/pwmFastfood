@@ -163,7 +163,7 @@
                             bottoni[0].addEventListener("click", function(){
                                 let id=idPiatto;
                                 let label=document.getElementById(id);
-                                let q=parseInt(label.innerHTML);
+                                let q=parseFloat(label.innerHTML);
                                 if(q>0){
                                     q--;
                                     label.innerHTML=q;
@@ -171,6 +171,11 @@
                                 }
                                 if(q==0){
                                     delete carrello[idRistorante][idPiatto];
+
+                                    //se l'ordine di quel ristorante è vuoto viene eliminato
+                                    if(Object.keys(carrello[idRistorante]).length === 0){
+                                        delete carrello[idRistorante];
+                                    }
                                 }
                                 localStorage.setItem("carrello", JSON.stringify(carrello));
                             });
@@ -178,7 +183,7 @@
                             bottoni[1].addEventListener("click", function(){
                                 let id=idPiatto;
                                 let label=document.getElementById(id);
-                                let q=parseInt(label.innerHTML);
+                                let q=parseFloat(label.innerHTML);
                                 q++;
                                 label.innerHTML=q;
                                 carrello[idRistorante][idPiatto]=q;
@@ -214,10 +219,10 @@
 
                 const name = (cells[0].textContent || '').trim().toLowerCase();
                 const cat = (cells[1].textContent || '').trim().toLowerCase();
-                const price=parseInt(cells[2].textContent);
+                const price=parseFloat(cells[2].textContent);
 
                 let matchQuery=q === '' || name.includes(q) || cat.includes(q); //è un match se la la stringa è vuota oppure è contenuta dentro i campi
-                let matchPrice = p === '' || price <= parseInt(p); //è un match se il valore è vuoto o se il prezzo del piatto è inferiore
+                let matchPrice = p === '' || price <= parseFloat(p); //è un match se il valore è vuoto o se il prezzo del piatto è inferiore
 
                 if(matchQuery&&matchPrice){
                     row.classList.remove('d-none');

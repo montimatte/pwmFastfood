@@ -153,7 +153,7 @@
                                         bottoni[0].addEventListener("click", function(){
                                             let id=idPiatto;
                                             let label=document.getElementById(id);
-                                            let q=parseInt(label.innerHTML);
+                                            let q=parseFloat(label.innerHTML);
                                             if(q>0){
                                                 q--;
                                                 label.innerHTML=q;
@@ -161,6 +161,11 @@
                                             }
                                             if(q==0){
                                                 delete carrello[idRistorante][idPiatto];
+                                                
+                                                //se l'ordine di quel ristorante è vuoto viene eliminato
+                                                if(Object.keys(carrello[idRistorante]).length === 0){
+                                                    delete carrello[idRistorante];
+                                                }
                                             }
                                             localStorage.setItem("carrello", JSON.stringify(carrello));
                                         });
@@ -169,7 +174,7 @@
                                         bottoni[1].addEventListener("click", function(){
                                             let id=idPiatto;
                                             let label=document.getElementById(id);
-                                            let q=parseInt(label.innerHTML);
+                                            let q=parseFloat(label.innerHTML);
                                             q++;
                                             label.innerHTML=q;
                                             carrello[idRistorante][idPiatto]=q;
@@ -216,10 +221,10 @@
                 if(col.classList.contains('d-none')) return;
                 const title = col.getElementsByClassName("nome")[0].innerHTML.toLowerCase();
                 const cat = col.getElementsByClassName("categoria")[0].innerHTML.toLowerCase();
-                const price = parseInt(col.getElementsByClassName("prezzo")[0].innerHTML);
+                const price = parseFloat(col.getElementsByClassName("prezzo")[0].innerHTML);
 
                 let matchQuery = q === '' || title.includes(q) || cat.includes(q); //è un match se la la stringa è vuota oppure è contenuta dentro i campi
-                let matchPrice = p === '' || price <= parseInt(p); //è un match se il valore è vuoto o se il prezzo del piatto è inferiore
+                let matchPrice = p === '' || price <= parseFloat(p); //è un match se il valore è vuoto o se il prezzo del piatto è inferiore
 
                 if(matchQuery && matchPrice){
                     col.style.display = '';
