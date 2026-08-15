@@ -136,7 +136,7 @@
                 }
                 clone.getElementsByTagName("button")[0].value=idRist;
                 clone.getElementsByTagName('h5')[1].innerHTML = "Totale: "+sub;
-				clone.getElementsByTagName('h5')[1].id = idRist;
+				        clone.getElementsByTagName('h5')[1].id = idRist;
                 tot+=sub;
 
                 clone.classList.remove("d-none");
@@ -189,6 +189,7 @@
 				const tot=parseFloat(document.getElementById(idRist).innerHTML.split(":")[1].trim()); //prendo il totale del ristorante e rimuovo la parte stringa
 				const piatti=carrello[idRist];
 				let ritiro;
+        let creazione=new Date().toISOString().split(".")[0]; //split per rimuovere i millisecondi
 
 				//calcolo il tempo di attesa per l'ordine (10min per ordine in coda)
 				const filter={
@@ -233,7 +234,9 @@
 					stato: "ordinato",
 					piatti: piatti,
 					totale: tot,
-					ora_ritiro: ritiro
+          data_creazione: creazione,
+					ora_ritiro: ritiro,
+          data_consegna:"" //è l'ora di ritiro effettiva che verrà inserita poi dal ristoratore
 				};
 
 				options = {

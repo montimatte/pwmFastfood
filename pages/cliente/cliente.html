@@ -46,6 +46,22 @@
   </div>
 </nav>
 
+<div class="row mt-3">
+	<div id="modello" class="col-lg-4 col-md-6 d-none">
+		<div class="card">
+			<div class="card-body">
+				<h5 class="card-title ristorante"></h5>
+				<ul class="piatti"></ul>
+				<p class="card-text totale"></p>
+				<p class="card-text stato"></p>
+				<p class="card-text creazione"></p>
+				<p class="card-text ritiro"></p>
+				<p class="card-text consegna"></p>
+			</div>
+		</div>
+	</div>
+</div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
     crossorigin="anonymous"></script>
@@ -56,7 +72,95 @@
               localStorage.clear();
               window.location.replace("../../index.html");
           }
+
+		  getOrdini();
       });
+
+		async function getOrdini(){
+			const utente=localStorage.getItem("auth");
+
+			const filter={
+				id_utente: utente,
+				$or:[{stato:"ordinato"},{stato:"in preparazione"}]
+			};
+
+			const options = {
+					method: "POST",
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(filter)
+			};
+
+			let ordini;
+			await fetch(`http://localhost:3000/ordini`, options)
+				.then(response => response.json())
+				.then(result => {
+					console.log(result);
+					if(result.success===true){
+						ordini=JSON.parse(result.ord);
+					}  
+					else{
+						alert(result.message);
+					}
+				});
+
+
+			var modello = document.getElementById('modello');
+			for (var i = 0; i < ordini.length; i++) {
+				var clone = modello.cloneNode(true);
+				var ordine = ordini[i];
+
+				//ottengo il nome del ristorante
+				await fetch(`http://localhost:3000/ristoranti/${ordine.id_ristorante}`)
+					.then(response => response.json())
+					.then(result => {
+						console.log(result);
+						if(result.success===true){
+							const ristorante=JSON.parse(result.rest);
+							clone.getElementsByClassName('card-title')[0].innerHTML = `${ristorante.nome} (${ristorante.indirizzo} - ${ristorante.citta}) `;
+						}  
+						else{
+							alert(result.message);
+						}
+				});
+
+				//ottengo i piatti
+				let lista=clone.getElementsByTagName("ul")[0];
+				for (const idPiatto in ordine.piatti) {                    
+					const objPiatto = ordine.piatti[idPiatto];
+					await fetch(`http://localhost:3000/piatto/${idPiatto}`)
+					.then(response => response.json())
+					.then(result => {
+						console.log(result);
+						if(result.success===true){
+							const piatto=JSON.parse(result.piatto);
+
+							let el=document.createElement("li");
+							el.classList.add("card-text");
+							el.innerHTML=`${objPiatto}x ${piatto.nome} (${piatto.prezzo})`;
+
+							lista.appendChild(el);
+						}  
+						else{
+							alert(result.message);
+						}
+					});
+				}
+
+
+				clone.getElementsByClassName('totale')[0].innerHTML = "Totale: "+ordine.totale;
+				clone.getElementsByClassName('stato')[0].innerHTML = "Stato: "+ordine.stato;
+				clone.getElementsByClassName('creazione')[0].innerHTML = "Data Creazione: "+ordine.data_creazione;
+				clone.getElementsByClassName('ritiro')[0].innerHTML = "Ora Ritiro Prevista: "+ordine.ora_ritiro;
+
+				clone.classList.remove('d-none');
+				clone.id = i;
+				modello.before(clone);
+
+			}
+		}
+
 
       function logout(){
           localStorage.clear();

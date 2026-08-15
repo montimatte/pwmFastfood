@@ -121,10 +121,6 @@
                             let ristorante = ristoranti[i];
                             let idRistorante=ristorante._id;
 
-                            //se è null imposto l'attributo ristorante in modo da non ottenere accessi illegali
-                            if (!carrello[idRistorante]) {
-                                carrello[idRistorante] = {};
-                            }
                             fetch(`http://localhost:3000/piatti/${idRistorante}`)
                             .then(response => response.json())
                             .then(result => {
@@ -172,6 +168,10 @@
 
                                         //ottengo il valore attuale, lo incremento e lo salvo sia nella label che nella localStorage
                                         bottoni[1].addEventListener("click", function(){
+                                            //se è null imposto l'attributo ristorante in modo da non ottenere accessi illegali
+                                            if (!carrello[idRistorante]) {
+                                                carrello[idRistorante] = {};
+                                            }
                                             let id=idPiatto;
                                             let label=document.getElementById(id);
                                             let q=parseFloat(label.innerHTML);

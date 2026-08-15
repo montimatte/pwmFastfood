@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storico Ordini</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">Fast Food</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            <li class="nav-item">
+            <a class="nav-link" href="cliente.html">Home</a>
+            </li>
+            <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" aria-current="page" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                Cerca
+            </a>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="ristoranti.html">Ristorante</a></li>
+                <li><a class="dropdown-item" href="piatti.html">Piatto</a></li>
+            </ul>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="carrello.html">Carrello</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link active" href="#">Storico Ordini</a>
+            </li>
+            <li class="nav-item">
+            <a class="nav-link" href="../account.html">Account</a>
+            </li>
+        </ul>
+        <div class="d-flex">
+            <button class="btn btn-outline-secondary" onclick="logout()">Logout</button>
+        </form>
+        </div>
+    </div>
+    </nav>
+    
+    <div class="row mt-3">
+        <div id="modello" class="col-lg-4 col-md-6 d-none">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title ristorante"></h5>
+                    <ul class="piatti"></ul>
+                    <p class="card-text totale"></p>
+                    <p class="card-text creazione"></p>
+                    <p class="card-text consegna"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
+    crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", ()=>{
+            //se l'utente non è autenticato viene mandato alla login
+            if(localStorage.getItem("auth")===null || localStorage.getItem("accType")!="cliente"){
+                localStorage.clear();
+                window.location.replace("../../index.html");
+            }
+            
+            getOrdini();
+        });
+
+        async function getOrdini(){
+            const utente=localStorage.getItem("auth");
+
+            const filter={
+                id_utente: utente,
+                stato:"consegnato"
+            };
+
+            const options = {
+					method: "POST",
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(filter)
+            };
+
+            let ordini;
+            await fetch(`http://localhost:3000/ordini`, options)
+                .then(response => response.json())
+                .then(result => {
+                    console.log(result);
+                    if(result.success===true){
+                        ordini=JSON.parse(result.ord);
+                    }  
+                    else{
+                        alert(result.message);
+                    }
+                });
+
+
+                var modello = document.getElementById('modello');
+                for (var i = 0; i < ordini.length; i++) {
+                    var clone = modello.cloneNode(true);
+                    var ordine = ordini[i];
+
+                    //ottengo il nome del ristorante
+                    await fetch(`http://localhost:3000/ristoranti/${ordine.id_ristorante}`)
+                        .then(response => response.json())
+                        .then(result => {
+                            console.log(result);
+                            if(result.success===true){
+                                const ristorante=JSON.parse(result.rest);
+                                clone.getElementsByClassName('card-title')[0].innerHTML = `${ristorante.nome} (${ristorante.indirizzo} - ${ristorante.citta}) `;
+                            }  
+                            else{
+                                alert(result.message);
+                            }
+                    });
+
+                    //ottengo i piatti
+                    let lista=clone.getElementsByTagName("ul")[0];
+                    for (const idPiatto in ordine.piatti) {                    
+                        const objPiatto = ordine.piatti[idPiatto];
+                        await fetch(`http://localhost:3000/piatto/${idPiatto}`)
+                        .then(response => response.json())
+                        .then(result => {
+                            console.log(result);
+                            if(result.success===true){
+                                const piatto=JSON.parse(result.piatto);
+
+                                let el=document.createElement("li");
+                                el.classList.add("card-text");
+                                el.innerHTML=`${objPiatto}x ${piatto.nome} (${piatto.prezzo})`;
+
+                                lista.appendChild(el);
+                            }  
+                            else{
+                                alert(result.message);
+                            }
+                        });
+                    }
+
+
+                    clone.getElementsByClassName('totale')[0].innerHTML = "Totale: "+ordine.totale;
+                    clone.getElementsByClassName('creazione')[0].innerHTML = "Data Creazione: "+ordine.data_creazione;
+                    clone.getElementsByClassName('consegna')[0].innerHTML = "Data Ritiro: "+ordine.data_consegna;
+
+                    clone.classList.remove('d-none');
+                    clone.id = i;
+                    modello.before(clone);
+
+                }
+
+
+
+            }
+
+        function logout(){
+            localStorage.clear();
+            window.location.replace("../../index.html");
+        }
+
+    </script>
+</body>
+</html>
