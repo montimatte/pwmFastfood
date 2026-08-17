@@ -153,7 +153,8 @@
         function dettagli(event){
             let id=event.target.value;
             localStorage.setItem("idPiatto",id);
-            window.location.replace("dettagliPiatto.html");
+            localStorage.setItem("backPage","ristoratore/menu.html");
+            window.location.replace("../dettagliPiatto.html");
         }
 
         function modifica(event){

@@ -88,6 +88,12 @@
                         <button class="btn btn-sm btn-outline-success">+</button>
                     </div>
                 </div>
+                <div class="row mb-2">
+                    <div class="col">
+                    <button class="btn btn-sm btn-outline-info" onclick="dettagli(event)">Dettagli</button>
+                    </div>
+                </div>
+
             </td>
         </tr>
     </table>
@@ -190,6 +196,8 @@
                                 localStorage.setItem("carrello", JSON.stringify(carrello));
                             });
 
+                            bottoni[2].value=piatto._id; //aggiungo il valore al bottone dei dettagli
+
                             clone.removeAttribute("id"); //rimuovo l'id per evitare conflitti
                             clone.removeAttribute("class"); //rimuovo l'intero attributo perchè class veniva usato solo per d-none
                             modello.before(clone);
@@ -231,6 +239,14 @@
                 }
             });
         }
+
+        function dettagli(event){
+            let id=event.target.value;
+            localStorage.setItem("idPiatto",id);
+            localStorage.setItem("backPage","cliente/menuRistorante.html");
+            window.location.replace("../dettagliPiatto.html");
+        }
+
 
         function logout(){
             localStorage.clear();

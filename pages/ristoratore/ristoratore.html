@@ -37,6 +37,24 @@
   </div>
 </nav>
 
+
+<div class="row mt-3">
+	<div id="modello" class="col-lg-4 col-md-6 d-none">
+		<div class="card">
+			<div class="card-body">
+				<h5 class="card-title cliente"></h5>
+				<ul class="piatti"></ul>
+				<p class="card-text totale"></p>
+				<p class="card-text stato"></p>
+				<p class="card-text creazione"></p>
+				<p class="card-text ritiro"></p>
+				<button class="btn btn-sm btn-outline-warning" onclick="cambiaStato(event, 'in preparazione')">In preparazione</button>
+				<button class="btn btn-sm btn-outline-info" onclick="cambiaStato(event, 'consegnato')">Consegnato</button>
+			</div>
+		</div>
+	</div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq"
     crossorigin="anonymous"></script>
@@ -47,6 +65,7 @@
             localStorage.clear();
             window.location.replace("../../index.html");
         }
+		getOrdini();
     });
 
     function manageRistorante(){
@@ -62,6 +81,139 @@
                     window.location.replace("modificaRistorante.html");
                 }
             });
+    }
+
+	async function getOrdini(){
+		const proprietario=localStorage.getItem("auth");
+		let idRist;
+		await fetch(`http://localhost:3000/ristorante/${proprietario}`)
+			.then(response => response.json())
+			.then(result => {
+                console.log(result);
+                if(result.status===200){
+                    const rest=JSON.parse(result.rest);
+					idRist=rest._id;
+                }
+                else if(result.status===500){
+                    alert(result.message);
+					return;
+                }
+            });
+
+
+		const filter={
+			id_ristorante: idRist,
+			$or:[{stato:"ordinato"},{stato:"in preparazione"}]
+		};
+
+		const options = {
+				method: "POST",
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(filter)
+		};
+
+		let ordini;
+		await fetch(`http://localhost:3000/ordini`, options)
+			.then(response => response.json())
+			.then(result => {
+				console.log(result);
+				if(result.success===true){
+					ordini=JSON.parse(result.ord);
+				}  
+				else{
+					alert(result.message);
+				}
+			});
+
+
+		var modello = document.getElementById('modello');
+		for (var i = 0; i < ordini.length; i++) {
+			var clone = modello.cloneNode(true);
+			var ordine = ordini[i];
+
+			//ottengo il nome del cliente
+			await fetch(`http://localhost:3000/user/${ordine.id_utente}`)
+				.then(response => response.json())
+				.then(result => {
+					console.log(result);
+					if(result.success===true){
+						const utente=JSON.parse(result.user);
+						clone.getElementsByClassName('card-title')[0].innerHTML = `${utente.nome} ${utente.cognome}`;
+					}  
+					else{
+						alert(result.message);
+					}
+			});
+
+				//ottengo i piatti
+				let lista=clone.getElementsByTagName("ul")[0];
+				for (const idPiatto in ordine.piatti) {                    
+					const objPiatto = ordine.piatti[idPiatto];
+					await fetch(`http://localhost:3000/piatto/${idPiatto}`)
+					.then(response => response.json())
+					.then(result => {
+						console.log(result);
+						if(result.success===true){
+							const piatto=JSON.parse(result.piatto);
+
+							let el=document.createElement("li");
+							el.classList.add("card-text");
+							el.innerHTML=`${objPiatto}x ${piatto.nome} (${piatto.prezzo})`;
+
+							lista.appendChild(el);
+						}  
+						else{
+							alert(result.message);
+						}
+					});
+				}
+
+
+				clone.getElementsByClassName('totale')[0].innerHTML = "Totale: "+ordine.totale;
+				clone.getElementsByClassName('stato')[0].innerHTML = "Stato: "+ordine.stato;
+				clone.getElementsByClassName('creazione')[0].innerHTML = "Data Creazione: "+ordine.data_creazione;
+				clone.getElementsByClassName('ritiro')[0].innerHTML = "Ora Ritiro Prevista: "+ordine.ora_ritiro;
+				let bottoni=clone.getElementsByTagName("button");
+				bottoni[0].value=ordine._id;
+				bottoni[1].value=ordine._id;
+
+				clone.classList.remove('d-none');
+				clone.id = i;
+				modello.before(clone);
+
+			}
+		}
+
+    function cambiaStato(event, stato){
+      let id=event.target.value;
+	  const ord={
+		stato: stato
+	  };
+	  if(stato=="consegnato"){
+		ord.data_consegna=new Date().toLocaleString('sv-SE')//l'ora svedese è formattata yyyy-MM-dd hh:mm:ss ed è la stessa dell'Italia anche per ora legale/solare;
+	  }
+
+      const options = {
+			method: "PUT",
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(ord)
+		};
+
+    fetch(`http://localhost:3000/ordine/${id}`, options)
+        .then(response => response.json())
+        .then(result => {
+            console.log(result);
+            if(result.success===true){
+                window.location.reload();
+            }
+            else{
+                alert(result.message);
+            }
+        });
     }
 
     function logout(){

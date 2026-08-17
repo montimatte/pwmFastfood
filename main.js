@@ -656,6 +656,34 @@ app.post('/ordine/', async (req, res) => {
     res.send();
 });
 
+app.put('/ordine/:id', async (req, res) => {
+    const id =new ObjectID(req.params.id);
+    let stato=req.body.stato;
+    let data_consegna="";
+    if(stato=="consegnato"){
+        data_consegna=req.body.data_consegna;
+    }
+
+    const obj={
+        $set:{stato:stato,
+            data_consegna:data_consegna}
+    }
+
+    try {
+        const client = await MongoClient.connect(mongoURL);
+        const coll = client.db('Fastfood').collection('ordine');
+
+        const cursor = await coll.updateOne({_id: id}, obj);
+        await client.close();
+
+        console.log("Ordine modificato");
+        res.status(200).json({success: true, message: "Ordine modificato"});
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ success: false, message: "Errore non gestito" });
+    }
+});
+
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })

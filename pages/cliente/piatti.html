@@ -78,6 +78,12 @@
                             <button class="btn btn-sm btn-outline-success">+</button>
                         </div>
                     </div>
+                    <div class="row mb-2">
+                    <div class="col">
+                        <button class="btn btn-sm btn-outline-info" onclick="dettagli(event)">Dettagli</button>
+                    </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -181,6 +187,7 @@
                                             localStorage.setItem("carrello", JSON.stringify(carrello));
                                         });
 
+                                        bottoni[2].value=piatto._id; //aggiungo il valore al bottone dei dettagli
 
                                         clone.classList.remove('d-none');
                                         clone.id = j;
@@ -199,13 +206,13 @@
                 });
             }
 
-        function aggiungi(event){
-
+        function dettagli(event){
+            let id=event.target.value;
+            localStorage.setItem("idPiatto",id);
+            localStorage.setItem("backPage","cliente/piatti.html");
+            window.location.replace("../dettagliPiatto.html");
         }
 
-        function rimuovi(event){
-
-        }
 
         function cerca(event){
             event.preventDefault(); //blocca il refresh della pagina

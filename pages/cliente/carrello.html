@@ -189,7 +189,7 @@
 				const tot=parseFloat(document.getElementById(idRist).innerHTML.split(":")[1].trim()); //prendo il totale del ristorante e rimuovo la parte stringa
 				const piatti=carrello[idRist];
 				let ritiro;
-        let creazione=new Date().toISOString().split(".")[0]; //split per rimuovere i millisecondi
+        let creazione=new Date().toLocaleString('sv-SE')//l'ora svedese è formattata yyyy-MM-dd hh:mm:ss ed è la stessa dell'Italia anche per ora legale/solare;
 
 				//calcolo il tempo di attesa per l'ordine (10min per ordine in coda)
 				const filter={
