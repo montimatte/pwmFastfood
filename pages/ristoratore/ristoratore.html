@@ -48,8 +48,8 @@
 				<p class="card-text stato"></p>
 				<p class="card-text creazione"></p>
 				<p class="card-text ritiro"></p>
-				<button class="btn btn-sm btn-outline-warning" onclick="cambiaStato(event, 'in preparazione')">In preparazione</button>
-				<button class="btn btn-sm btn-outline-info" onclick="cambiaStato(event, 'consegnato')">Consegnato</button>
+				<button class="btn btn-sm btn-outline-warning d-none" onclick="cambiaStato(event, 'in preparazione')">In preparazione</button>
+				<button class="btn btn-sm btn-outline-info d-none" onclick="cambiaStato(event, 'consegnato')">Consegnato</button>
 			</div>
 		</div>
 	</div>
@@ -178,6 +178,12 @@
 				let bottoni=clone.getElementsByTagName("button");
 				bottoni[0].value=ordine._id;
 				bottoni[1].value=ordine._id;
+				if(ordine.stato=="ordinato"){
+					bottoni[0].classList.remove("d-none");
+				}
+				else{
+					bottoni[1].classList.remove("d-none");
+				}
 
 				clone.classList.remove('d-none');
 				clone.id = i;

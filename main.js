@@ -203,6 +203,20 @@ app.delete('/user/:id', async (req, res) => {
     try {
         const client = await MongoClient.connect(mongoURL);
         const coll = client.db('Fastfood').collection('user');
+
+        //elimino i dati collegati
+        //ottengo l'id del ristorante per eliminare i piatti
+        const tmp=client.db('Fastfood').collection('ristorante');
+        const restmp=await tmp.find({id_proprietario: id}).toArray();
+        if(restmp.length>0){
+            const idRist=restmp[0]._id.toString();
+            await deleteDati("piatto","id_ristorante",idRist);
+            await deleteDati("ordine","id_ristorante",idRist);
+        }
+        await deleteDati("ristorante","id_proprietario",id);
+        await deleteDati("ordine","id_utente",id);
+
+
         const result = await coll.deleteOne({_id: new ObjectID(id)});
 
         console.log("Utente cancellato:");
@@ -360,6 +374,15 @@ app.delete('/ristorante/:ristoratore', async (req, res) => {
     try {
         const client = await MongoClient.connect(mongoURL);
         const coll = client.db('Fastfood').collection('ristorante');
+
+        //elimino i dati collegati
+        //ottengo l'id del ristorante per eliminare i piatti
+        const restmp=await coll.find({id_proprietario: id}).toArray();
+        const idRist=restmp[0]._id;
+
+        await deleteDati("piatto","id_ristorante",idRist.toString());
+        await deleteDati("ordine","id_ristorante",idRist.toString());
+
         const result = await coll.deleteOne({id_proprietario: id});
 
         console.log("Ristorante cancellato:");
@@ -682,7 +705,29 @@ app.put('/ordine/:id', async (req, res) => {
         console.log(error);
         res.status(500).json({ success: false, message: "Errore non gestito" });
     }
-});
+})
+
+
+//===================MISC===================\\
+
+//funzione che all'eliminazione di un documento di una collezione elimina i dati ad esso collegati
+async function deleteDati(collezione, nomeCampo, valoreCampo){
+    try {
+        const obj={
+            [nomeCampo]:valoreCampo
+        }
+        console.log(obj);
+        const client = await MongoClient.connect(mongoURL);
+        const coll = client.db('Fastfood').collection(collezione);
+        const result = await coll.deleteMany(obj); //le quadre per mettere come nome dell'attributo il valore del parametro
+        console.log(result);
+        console.log(`dati di "${collezione}" collegati a ${nomeCampo}: ${valoreCampo} eliminati`);
+        await client.close();
+      
+    } catch (error) {
+        console.log(error);
+    }
+}
 
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
