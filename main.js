@@ -5,6 +5,9 @@ const ObjectID = require('mongodb').ObjectId;
 const mongoURL ="mongodb+srv://matteomonti8:Un!mi.0027@cluster0.okkntfo.mongodb.net/";
 const app = express();
 const port = 3000;
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocument = require('./swagger.json');
+app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use(express.json());
 app.use(cors());
